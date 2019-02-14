@@ -1,0 +1,221 @@
+<div class="container">
+  <!-- start of user container -->
+  <div class="left-alligned-container col-sm-12 col-md-4">
+    <div class="users-container ">
+      <div class="card users-main-card">
+        <div class="card-header users-navbar-items">
+          <div *ngIf="isClickedOnSearchIcon" class="search-icon-bar">
+            <input [(ngModel)]="searchedValue" placeholder="Search users" class="form-control" id="override" type="text"
+              name="search">
+            <span (click)="hideSearchBar()" class="fa fa-arrow-left"></span>
+            <span (click)="hideSearchBar()" class="fa fa-close"></span>
+          </div>
+          <div [hidden]="isClickedOnSearchIcon" class="users-title">
+            <h4>Users</h4>
+          </div>
+          <div [hidden]="isClickedOnSearchIcon" class="users-rest-items">
+            <div class="menu-icon">
+              <div class="bars-container">
+                <div class="bar1"></div>
+                <div class="bar2"></div>
+                <div class="bar3"></div>
+              </div>
+            </div>
+            <div class="search-icon" (click)="showSearchBar()">
+              <i class="fa fa-search"></i>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card user-full-card" *ngFor="let user of userAccounts | filter:searchedValue; let i=index"
+            (click)="showUsersAlbums(user.id)">
+            <div class="user-card-details">
+              <div class="image-container">
+                <i class="fas fa-user-circle"></i>
+              </div>
+              <div class="user-details">
+                <span class="user-full-details">{{user.name}}</span>
+                <span class="user-full-details">{{user.username}}</span>
+                <span class="user-full-details">{{user.email}}</span>
+              </div>
+            </div>
+            <hr>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- end of user container -->
+
+
+  <!-- start of albums container in the normal view -->
+  <div class="albums-with-photos-container  col-sm-12  col-md-8">
+    <div *ngIf="!isDragAndDropView " class="card albums-card">
+      <div class="albums-header">
+        <div class="album-title">
+          <h4>Albums</h4>
+        </div>
+        <div class="album-select-checkbox">
+          <input class="form-check-input select-all-check" type="checkbox" value="" (change)="selectAll($event.target)">
+          <span id="select-all-checkbox">Select All</span>
+        </div>
+      </div>
+      <div *ngIf="!showUserAlbums">
+        <h4 id="default-user-selection">Select a user first </h4>
+      </div>
+      <div *ngIf="showUserAlbums" class="checkboxes-groups-container">
+        <div *ngFor="let userAlbum of userAlbums; let i=index" class="albums-details-card">
+          <div>
+            <input class="form-check-input" (change)="showUsersPhotos(userAlbum)" type="checkbox"
+              [(ngModel)]="userAlbum.isChecked" id="defaultCheck_{{i}}">
+          </div>
+          <span *ngIf="isAlbumDataRecieved" (click)="getAlbumId(userAlbum)"
+            id="album-checkbox-title">{{userAlbum.title}}</span>
+          <span *ngIf="isAlbumDataRecieved " id="album-photos">{{userAlbum.photos?.length}}</span>
+        </div>
+      </div>
+    </div>
+    <!-- //end of albums container in the normal view -->
+
+
+    <!-- //start of albums container in dragview mode -->
+    <div *ngIf="isDragAndDropView " class="card albums-card">
+      <div class="albums-header">
+        <div class="album-title">
+          <h4>Albums</h4>
+          <span id="drag-and-drop-text">Drag and Drop to Photos section</span>
+        </div>
+        <div class="album-select-checkbox">
+          <input class="form-check-input select-all-check" type="checkbox" value="" (change)="selectAll($event.target)">
+          <span id="select-all-checkbox">Select All</span>
+        </div>
+      </div>
+      <div *ngIf="!showUserAlbums">
+        <h4 id="default-user-selection">Select a user first </h4>
+      </div>
+      <div *ngIf="showUserAlbums" class="checkboxes-groups-container">
+        <div *ngFor="let userAlbum of userAlbums ; let i=index" class="">
+          <div draggable [dragData]="userAlbum" (click)="showDraggableUsersPhotos(userAlbum)"
+            class="dragged-objects-container">
+            <div class="dragged-objects">
+              <div class="dragged-title">
+                <span *ngIf="isAlbumDataRecieved" (click)="getAlbumId(userAlbum)"
+                  id="dragged-title">{{userAlbum.title}}</span>
+              </div>
+              <div class="dragged-photos">
+                <span *ngIf="isAlbumDataRecieved" id="dragged-photos-length">{{userAlbum.photos?.length}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- //end of albums container in dragview mode -->
+
+
+
+    <div class="add-button-container">
+      <i data-toggle="modal" data-target="#myModal" class="fas fa-plus-circle"></i>
+    </div>
+
+    <div class="switch-buttons-container">
+      <button (click)="switchToDragAndDrop()" class=" btn btn-dark"> Drag and drop view</button>
+      <button (click)="switchToNormalView()" class=" btn btn-dark"> Normal View</button>
+    </div>
+
+    <div [hidden]="hideProgressBar" class="progress-bar-container">
+      <div id="progress-bar">
+        <div id="progress">0%</div>
+      </div>
+    </div>
+
+    <!-- start of photos container -->
+    <div class="card photos-card col-sm-12">
+      <div class="photos-count-with-dropabble-container">
+        <div *ngIf="isDragAndDropView" class="photos-count-title">
+          <h4>{{photoList.length}} Photos from</h4>
+        </div>
+        <div *ngIf="!isDragAndDropView" class="photos-count-title">
+          <h4>{{photoList.length}} Photos </h4>
+        </div>
+        <div *ngIf="isDragAndDropView" class="dropped-albums-container" droppable (onDrop)="onItemDrop($event)">
+          <div *ngFor="let item of droppedItems; let i = index" class="selected-dropped-item-container">
+            <div class="selected-drop-item">
+              <div>{{item.title}}</div>
+              <div><i (click)="removeDroppedAlbum(item, i)" class="fas fa-window-close"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="sort-buttons-container">
+          <i data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false"
+            class="fas fa-bars"></i>
+          <div class="dropdown-menu">
+            <div class="dropdown-item name-item-container">
+              <div class="name-item">
+                <span>
+                  <i class="fas fa-check"></i>
+                </span>
+                <span class="dropdown-items">Name</span>
+              </div>
+            </div>
+            <hr>
+            <div class="dropdown-item sort-ascending-container">
+              <div class="sort-ascending-item">
+                <span *ngIf="isClickedOnAscending">
+                  <i class="fas fa-check"></i>
+                </span>
+                <span class="dropdown-items" (click)="sortPhotosAZ()">A-Z</span>
+              </div>
+            </div>
+            <div class="dropdown-item sort-descending-container">
+              <div class="sort-descending-item">
+                <span *ngIf="isClickedOnDescendning">
+                  <i class="fas fa-check"></i>
+                </span>
+                <span class="dropdown-items" (click)="sortPhotosZA()">Z_A</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="image-container-albums">
+        <div class="image-card" *ngFor="let photo of pagedPhotoList">
+
+          <img [src]="photo.thumbnailUrl">
+          <div class="image-title">
+            {{photo.title}}
+          </div>
+        </div>
+
+        <div *ngIf="showPaginator" class="pagination-container">
+          <mat-paginator #paginator [length]="photoList.length" [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizeOptions" (page)="pageChange($event)">
+          </mat-paginator>
+        </div>
+        <!-- end of photos container -->
+
+        <!-- start of model which is fired by the add album card -->
+        <div id="myModal" class="modal fade" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="form-container">
+                <div class="card form-card">
+                  <form [formGroup]="addAlbumForm">
+                    <div class="form-group">
+                      <label for="exampleInputEmail1">Album Name</label>
+                      <input type="text" formControlName="addedAlbum" class="form-control" aria-describedby="emailHelp"
+                        placeholder="Enter album name">
+                    </div>
+                    <button data-dismiss="modal" (click)="addAlbum()" class="btn btn-primary">Add</button>
+                    <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- //end of add model -->
+
+      </div>
+
+    </div>
