@@ -11,7 +11,6 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { NgDragDropModule } from 'ng-drag-drop';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-
 import { CdkTableModule } from '@angular/cdk/table';
 import { MatPaginatorModule } from '@angular/material';
 

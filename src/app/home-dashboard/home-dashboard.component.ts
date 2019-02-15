@@ -36,6 +36,7 @@ export class HomeDashboardComponent implements OnInit {
   isAlbumDataRecieved: boolean = false;
   @ViewChild(MatPaginator) paginator: MatPaginator;
   showPaginator: boolean = false;
+  isClickedOnPagePaginator: boolean = false;
   constructor(private homeDashboardService: HomeDashboardService, private formBuilder: FormBuilder) { }
 
 
@@ -100,18 +101,16 @@ export class HomeDashboardComponent implements OnInit {
     }
   }
   showUsersPhotos(album) {
-    this.showPaginator = true;
-    this.hideProgressBar = false;
     if (album.isChecked) {
+      this.hideProgressBar = false;
+      this.showPaginator = true;
       this.photoList = this.photoList.concat(album.photos);
       this.increaseProgressBar();
       this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)), this.pageSize + (this.pageIndex) * (this.pageSize));
-
     } else {
-      this.pagedPhotoList=[]
       album.photos.forEach((photo) => {
-        this.showPaginator = false;
         this.hideProgressBar = true;
+        this.pagedPhotoList = []
         let i = -1;
         i = this.photoList.findIndex(userPhoto => photo.id === userPhoto.id);
         if (i !== -1) {
@@ -119,6 +118,7 @@ export class HomeDashboardComponent implements OnInit {
           i = -1;
         }
       });
+
       this.pageIndex = this.photoList.length / this.pageSize < this.pageIndex ? this.photoList.length / this.pageSize - 1 : this.pageIndex
       this.paginator.pageIndex = this.pageIndex;
       this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)), this.pageSize + (this.pageIndex) * (this.pageSize));
@@ -134,7 +134,7 @@ export class HomeDashboardComponent implements OnInit {
       this.increaseProgressBar()
       this.userAlbums.forEach(album => {
         album.isChecked = true;
-        this.photoList = this.photoList.concat(album  .photos)
+        this.photoList = this.photoList.concat(album.photos)
         this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)), this.pageSize + (this.pageIndex) * (this.pageSize));
       });
     } else {
@@ -198,6 +198,7 @@ export class HomeDashboardComponent implements OnInit {
 
   //a method that is executed when the user switches from page to page
   pageChange(e) {
+    this.isClickedOnPagePaginator = true;
     this.pageSize = e.pageSize;
     this.pageIndex = e.pageIndex;
     this.pagedPhotoList = this.photoList.slice(((e.pageIndex) * (e.pageSize)), e.pageSize + (e.pageIndex) * (e.pageSize));

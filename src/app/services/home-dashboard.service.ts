@@ -10,7 +10,6 @@ export class HomeDashboardService {
   userId:number=0;
   curruentClickedAlbumId:number=0;
   currentSelectedAlbum:any;
-  currentUserAlbums:any
 
   constructor(private http: HttpClient) { }
 
