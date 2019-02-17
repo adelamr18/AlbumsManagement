@@ -50,7 +50,7 @@
 
   <!-- start of albums container in the normal view -->
   <div class="albums-with-photos-container  col-sm-12  col-md-8">
-    <div *ngIf="!isDragAndDropView " class="card albums-card">
+    <div  class="card albums-card">
       <div class="albums-header">
         <div class="album-title">
           <h4>Albums</h4>
@@ -63,7 +63,7 @@
       <div *ngIf="!showUserAlbums">
         <h4 id="default-user-selection">Select a user first </h4>
       </div>
-      <div *ngIf="showUserAlbums" class="checkboxes-groups-container">
+      <div *ngIf="showUserAlbums && !isDragAndDropView" class="checkboxes-groups-container">
         <div *ngFor="let userAlbum of userAlbums; let i=index" class="albums-details-card">
           <div>
             <input class="form-check-input" (change)="showUsersPhotos(userAlbum)" type="checkbox"
@@ -74,12 +74,28 @@
           <span *ngIf="isAlbumDataRecieved " id="album-photos">{{userAlbum.photos?.length}}</span>
         </div>
       </div>
+      <div *ngIf="showUserAlbums && isDragAndDropView" class="checkboxes-groups-container">
+        <div *ngFor="let userAlbum of userAlbums ; let i=index" class="">
+          <div draggable [dragData]="userAlbum" (click)="showDraggableUsersPhotos(userAlbum)"
+            class="dragged-objects-container">
+            <div class="dragged-objects">
+              <div class="dragged-title">
+                <span *ngIf="isAlbumDataRecieved" (click)="getAlbumId(userAlbum)"
+                  id="dragged-title">{{userAlbum.title}}</span>
+              </div>
+              <div class="dragged-photos">
+                <span *ngIf="isAlbumDataRecieved" id="dragged-photos-length">{{userAlbum.photos?.length}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <!-- //end of albums container in the normal view -->
 
 
     <!-- //start of albums container in dragview mode -->
-    <div *ngIf="isDragAndDropView " class="card albums-card">
+    <!-- <div *ngIf="isDragAndDropView " class="card albums-card">
       <div class="albums-header">
         <div class="album-title">
           <h4>Albums</h4>
@@ -109,7 +125,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
     <!-- //end of albums container in dragview mode -->
 
 

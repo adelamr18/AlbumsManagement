@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { HomeDashboardService } from '../services/home-dashboard.service';
 import { FormGroup, Validators, FormBuilder } from "@angular/forms";
 import { PageEvent } from '@angular/material';
@@ -37,7 +37,7 @@ export class HomeDashboardComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   showPaginator: boolean = false;
   isClickedOnPagePaginator: boolean = false;
-  constructor(private homeDashboardService: HomeDashboardService, private formBuilder: FormBuilder) { }
+  constructor(private homeDashboardService: HomeDashboardService, private formBuilder: FormBuilder, private cd: ChangeDetectorRef) { }
 
 
   ngOnInit() {
@@ -57,10 +57,10 @@ export class HomeDashboardComponent implements OnInit {
     this.homeDashboardService.showUsers().subscribe((data) => {
       this.userAccounts = data;
     }
-    )
+    );
   }
 
-  //show the users album according to his id when a click event occurs on a row that a user
+  // show the users album according to his id when a click event occurs on a row that a user
   showUsersAlbums(id) {
     this.droppedItems = [];
     this.hideProgressBar = true;
@@ -102,12 +102,17 @@ export class HomeDashboardComponent implements OnInit {
   }
   showUsersPhotos(album) {
     if (album.isChecked) {
+      this.droppedItems.push(album);
       this.hideProgressBar = false;
       this.showPaginator = true;
       this.photoList = this.photoList.concat(album.photos);
       this.increaseProgressBar();
       this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)), this.pageSize + (this.pageIndex) * (this.pageSize));
     } else {
+      if (!this.isDragAndDropView) {
+        const index = this.droppedItems.findIndex(droppedAlbum => droppedAlbum.id === album.id );
+        this.droppedItems.splice(index, 1);
+      }
       album.photos.forEach((photo) => {
         this.hideProgressBar = true;
         this.pagedPhotoList = []
@@ -128,16 +133,26 @@ export class HomeDashboardComponent implements OnInit {
   //show all albums in case the user checks the chekbox or not according to the input.checked value
   selectAll(input) {
     if (input.checked) {
+      this.droppedItems =  this.droppedItems.concat(this.userAlbums);
+
       this.hideProgressBar = false;
       this.showPaginator = true;
       this.photoList = [];
-      this.increaseProgressBar()
+      this.increaseProgressBar();
       this.userAlbums.forEach(album => {
         album.isChecked = true;
-        this.photoList = this.photoList.concat(album.photos)
-        this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)), this.pageSize + (this.pageIndex) * (this.pageSize));
+        this.photoList = this.photoList.concat(album.photos);
+        this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)),
+         this.pageSize + (this.pageIndex) * (this.pageSize));
       });
+      if (this.isDragAndDropView) {
+        this.userAlbums = [];
+      }
     } else {
+      if (this.isDragAndDropView) {
+        this.userAlbums = this.droppedItems;
+      }
+      this.droppedItems = [];
       this.hideProgressBar = true;
       this.showPaginator = false;
       this.photoList = [];
@@ -145,6 +160,7 @@ export class HomeDashboardComponent implements OnInit {
       this.userAlbums.forEach(album => {
         album.isChecked = false;
       });
+
     }
 
   }
@@ -170,8 +186,7 @@ export class HomeDashboardComponent implements OnInit {
 
   //a method that is executed when the user drops the selected album into the photos container
   onItemDrop(e: any) {
-    this.droppedItems.push(e.dragData);
-    this.userAlbums.splice(this.homeDashboardService.curruentClickedAlbumId, 1)
+    this.userAlbums.splice(this.homeDashboardService.curruentClickedAlbumId, 1);
     this.isClickedOnDraggedItem = true;
     e.dragData.isChecked = true;
     this.showUsersPhotos(e.dragData);
@@ -181,16 +196,33 @@ export class HomeDashboardComponent implements OnInit {
   }
   switchToDragAndDrop() {
     this.isDragAndDropView = true;
+    this.droppedItems.forEach(element => {
+      const index = this.userAlbums.findIndex(userAlbum => userAlbum.id === element.id);
+      this.userAlbums.splice(index, 1);
+    });
   }
   switchToNormalView() {
+    if (this.userAlbums.length === 0) {
+      this.userAlbums = this.droppedItems;
+    } else {
+      this.droppedItems.forEach(element => {
+        const index = this.userAlbums.findIndex(userAlbum => userAlbum.id === element.id);
+        if (index === -1) {
+          this.userAlbums.push(element);
+        }
+      });
+    }
     this.isDragAndDropView = false;
+
   }
   showDraggableUsersPhotos(album) {
     this.homeDashboardService.currentSelectedAlbum = album;
   }
   removeDroppedAlbum(album, index) {
     this.droppedItems.splice(index, 1);
-    this.userAlbums.push(album);
+    if (this.userAlbums.findIndex(userAlbum => userAlbum.id === album.id) === -1) {
+      this.userAlbums.push(album);
+    }
     album.isChecked = false;
     this.showUsersPhotos(album);
     this.hideProgressBar = true;
@@ -221,12 +253,14 @@ export class HomeDashboardComponent implements OnInit {
     this.isClickedOnDescendning = false;
     this.photoList.sort(this.sortAlphapiticallyA_Z);
     this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)), this.pageSize + (this.pageIndex) * (this.pageSize));
-
+    this.cd.detectChanges();
   }
   sortPhotosZA() {
     this.isClickedOnDescendning = true;
     this.isClickedOnAscending = false;
     this.photoList.sort(this.sortAlphapiticallyZ_A);
     this.pagedPhotoList = this.photoList.slice(((this.pageIndex) * (this.pageSize)), this.pageSize + (this.pageIndex) * (this.pageSize));
+    this.cd.detectChanges();
+
   }
 }
